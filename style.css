@@ -26,3 +26,37 @@
 
 /* Allow the longer network title to wrap within the header. */
 .brand>span:last-child{min-width:0}.brand-title{line-height:1.2}
+
+/* Larger network name on a distinct teal masthead, revised 15 October 2026. */
+.site-header{background:#244f63;color:#fff;border-bottom:0}
+.site-header .header-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;padding-block:30px 16px}
+.site-header .brand{grid-column:1/-1;justify-self:start;gap:22px;max-width:100%;color:#fff}
+.site-header .brand:hover{color:#fff}
+.site-header .brand-mark{width:64px;height:64px;border-color:#a8c7cc;color:#fff;font-size:2.5rem}
+.site-header .brand-title{font-size:clamp(2rem,4.2vw,3.5rem);line-height:1.12;letter-spacing:-.025em;text-wrap:balance}
+.site-header .brand-chinese{color:#dfeced;font-size:1.05rem;margin-top:11px}
+.site-header .name-separator{color:#b8d1d5}
+.site-header .brand-sub{color:#d3e2e6;font-size:.8rem;letter-spacing:.12em;margin-top:8px}
+.site-header .nav{grid-column:1/-1;justify-content:flex-start;gap:32px;width:100%;border-top:1px solid #64838f;padding-top:13px}
+.site-header .nav a{color:#fff;font-size:1.08rem;padding-block:5px}
+.site-header .nav a:hover,.site-header .nav a[aria-current=page]{color:#fff;border-bottom-color:#e9b6a4}
+.site-header a:focus-visible,.site-header button:focus-visible{outline-color:#fff}
+.site-header .menu-button{justify-self:start;color:#fff;border-color:#a8c7cc;min-height:44px;padding:8px 18px}
+@media(max-width:760px){
+  .site-header .header-inner{gap:20px;padding-block:25px 18px}
+  .site-header .brand{gap:14px;align-items:flex-start}
+  .site-header .brand-mark{width:42px;height:42px;font-size:1.75rem;margin-top:4px}
+  .site-header .brand-title{font-size:clamp(1.8rem,7vw,2.65rem);line-height:1.13}
+  .site-header .brand-chinese{font-size:.88rem;margin-top:12px}
+  .site-header .brand-sub{font-size:.66rem;letter-spacing:.08em;line-height:1.5;margin-top:8px}
+  .site-header .nav{gap:10px 26px;padding-top:14px}
+  .site-header .nav a{min-height:44px;display:inline-flex;align-items:center}
+}
+@media print{
+  .site-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .site-header .header-inner{padding:18px 22px;gap:0}
+  .site-header .brand-title{font-size:26pt}
+  .site-header .brand-mark{width:48px;height:48px;font-size:24pt}
+  .site-header .brand-chinese{font-size:11pt;margin-top:6px}
+  .site-header .brand-sub{font-size:8pt;margin-top:5px}
+}
