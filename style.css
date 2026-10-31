@@ -60,3 +60,24 @@
   .site-header .brand-chinese{font-size:11pt;margin-top:6px}
   .site-header .brand-sub{font-size:8pt;margin-top:5px}
 }
+
+/* Seminar registration */
+.seminar-list{padding-bottom:72px}
+.seminar-card{display:grid;grid-template-columns:minmax(0,1fr) 168px;gap:40px;padding:36px 0;border-top:1px solid var(--line,#d6dedb)}
+.seminar-card h2{font-size:clamp(1.55rem,3vw,2.15rem);line-height:1.25;margin:16px 0}
+.seminar-speaker{font-size:1.25rem;margin-bottom:6px}
+.seminar-card .button{margin-top:14px}
+.registration-qr{margin:0;align-self:end;text-align:center}
+.registration-qr img{display:block;background:#fff;width:144px;height:144px;margin:auto;max-width:100%}
+.registration-qr figcaption{font-size:.9rem;margin-top:8px}
+.split-section .seminar-card{display:block;padding:0;border:0}
+.split-section .seminar-card h2{font-size:1.7rem}
+.seminar-registration-detail{margin:0 0 28px;line-height:1.65}
+.subscription-choice{border:0;padding:0;margin:8px 0;min-width:0}
+.subscription-choice legend{font-size:1.1rem;margin-bottom:10px}
+.radio-options{display:flex;gap:32px;flex-wrap:wrap;margin-top:14px}
+.radio-options label{display:flex;align-items:center;gap:10px;cursor:pointer}
+.join-form .radio-options input{width:22px;height:22px;min-height:22px;padding:0;accent-color:#005a9c}
+@media(max-width:600px){.seminar-card{grid-template-columns:1fr;gap:24px}.registration-qr{justify-self:start}.seminar-card h2{overflow-wrap:anywhere}}
+
+.seminar-times{line-height:1.7;max-width:65ch}.seminar-bio{max-width:70ch;line-height:1.65}.seminar-registration-detail p{margin-bottom:16px}
