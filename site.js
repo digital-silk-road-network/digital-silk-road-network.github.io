@@ -6,88 +6,82 @@ if(menuButton&&nav){menuButton.addEventListener('click',()=>{const open=menuButt
 const membersRedirect=document.querySelector('a[data-members-redirect]');
 if(membersRedirect){window.location.replace(membersRedirect.href+window.location.hash);}
 
-const membershipForm=document.querySelector('#membership-form');
-if(membershipForm&&window.fetch&&window.AbortController){
-  const submitButton=membershipForm.querySelector('#join-submit');
-  const formStatus=membershipForm.querySelector('#form-status');
-  let submitting=false;
-  membershipForm.addEventListener('input',event=>{
-    if(event.target.matches('input[required]'))event.target.setCustomValidity('');
+// Temporary email delivery while FormSubmit is unavailable (HTTP 522, 5 November 2026).
+// Opening a draft or copying these details never confirms that an email has been sent.
+function prepareEmailRegistration(form, seminar){
+  if(!form)return;
+  const button=form.querySelector(seminar?'#registration-submit':'#join-submit');
+  const status=form.querySelector(seminar?'#registration-status':'#form-status');
+  const recipient='wang.june312@gmail.com';
+  const label=seminar?'registration':'membership enquiry';
+  const notice=document.createElement('p');
+  notice.className='form-status revised-text';
+  notice.setAttribute('role','note');
+  notice.textContent='Online delivery is currently unavailable. Complete this form to prepare an email to June, then send it from your email app. You can also copy the details into webmail. Preparing the email does not send it.';
+  form.prepend(notice);
+  button.textContent=seminar?'Prepare registration email':'Prepare membership email';
+  const privacy=form.querySelector(seminar?'#registration-privacy':'#form-privacy');
+  if(privacy){
+    privacy.textContent=seminar?
+      'Send your details directly to June Wang at '+recipient+' to manage this seminar and share its joining details. If you choose Yes, your name and email address will also be added to the network’s seminar updates mailing list in Google Contacts. You can withdraw your subscription by emailing June. Preparing or copying the email does not send your details.':
+      'Send your details directly to June Wang at '+recipient+' to register your interest in joining the network. Preparing or copying the email does not send your details.';
+  }
+  let panel;
+  form.addEventListener('input',event=>{
+    if(event.target.matches('input[required]:not([type="radio"])'))event.target.setCustomValidity('');
+    if(panel){panel.hidden=true;status.textContent='Your details have changed. Prepare the email again before sending.';}
   });
-  membershipForm.addEventListener('submit',async event=>{
+  form.addEventListener('submit',event=>{
     event.preventDefault();
-    if(submitting)return;
-    for(const input of membershipForm.querySelectorAll('input[required]')){
+    for(const input of form.querySelectorAll('input[required]:not([type="radio"])')){
       input.value=input.value.trim();
       input.setCustomValidity(input.value?'':'Please complete this field.');
     }
-    if(!membershipForm.reportValidity())return;
-    if(membershipForm.elements.namedItem('_honey').value)return;
-    submitting=true;
-    submitButton.disabled=true;
-    submitButton.textContent='Sending…';
-    membershipForm.setAttribute('aria-busy','true');
-    formStatus.classList.remove('is-error');
-    formStatus.textContent='Sending your details. Please keep this page open.';
-    const controller=new AbortController();
-    const timeout=window.setTimeout(()=>controller.abort(),30000);
-    let sent=false;
-    try{
-      const response=await fetch(membershipForm.dataset.submitEndpoint,{
-        method:'POST',
-        headers:{'Content-Type':'application/json','Accept':'application/json'},
-        body:JSON.stringify(Object.fromEntries(new FormData(membershipForm))),
-        signal:controller.signal
-      });
-      const result=await response.json();
-      const accepted=result.success===true||result.success==='true';
-      const awaitingActivation=/activat|confirm your email/i.test(String(result.message||''));
-      if(!response.ok||!accepted||awaitingActivation)throw new Error('Delivery was not confirmed.');
-      sent=true;
-      formStatus.textContent='Your details have been sent. Thank you for your interest.';
-      window.location.assign(membershipForm.elements.namedItem('_next').value);
-    }catch(error){
-      formStatus.classList.add('is-error');
-      formStatus.textContent='We could not confirm delivery. Your details are still in the form. Please try again, or email them to wang.june312@gmail.com.';
-    }finally{
-      window.clearTimeout(timeout);
-      membershipForm.removeAttribute('aria-busy');
-      if(!sent){submitting=false;submitButton.disabled=false;submitButton.textContent='Send my details';}
-    }
+    if(!form.reportValidity()||form.elements.namedItem('_honey').value)return;
+    const entries=Array.from(new FormData(form)).filter(([name])=>!name.startsWith('_'));
+    const subject=form.elements.namedItem('_subject').value;
+    const names={name:'Full name',email:'Email address'};
+    const body='Please record my '+label+' with the following details.\n\n'+
+      entries.map(([name,value])=>(names[name]||name)+': '+value).join('\n')+
+      '\n\nRegistration page: '+form.elements.namedItem('_url').value;
+    if(panel)panel.remove();
+    panel=document.createElement('section');
+    panel.className='form-status revised-text';
+    panel.id=seminar?'registration-email-details':'membership-email-details';
+    const title=document.createElement('h2');
+    title.textContent=seminar?'Send your registration by email':'Send your membership enquiry by email';
+    const instructions=document.createElement('p');
+    instructions.textContent='Your '+label+' has not been sent yet. Open the draft below and send it to '+recipient+'. If your email app does not open, copy the details and send them using webmail.';
+    const actions=document.createElement('div');
+    actions.className='form-actions';
+    const draft=document.createElement('a');
+    draft.className='button';draft.textContent='Open email draft';
+    draft.href='mailto:'+recipient+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(body);
+    const copy=document.createElement('button');
+    copy.type='button';copy.className='text-link';copy.textContent='Copy email details';
+    const details=document.createElement('textarea');
+    details.readOnly=true;
+    details.setAttribute('aria-label',seminar?'Registration email details':'Membership email details');
+    details.style.cssText='display:block;width:100%;min-height:18rem;margin-top:20px;padding:12px;font:inherit;color:inherit;background:white;border:1px solid #839097;';
+    details.value='To: '+recipient+'\nSubject: '+subject+'\n\n'+body;
+    const copyStatus=document.createElement('p');
+    copyStatus.setAttribute('role','status');copyStatus.setAttribute('aria-live','polite');
+    copy.addEventListener('click',async()=>{
+      try{
+        await navigator.clipboard.writeText(details.value);
+        copyStatus.textContent='Details copied. Paste them into an email to '+recipient+' and send it.';
+      }catch(error){
+        details.focus();details.select();
+        copyStatus.textContent='Please copy the selected text, paste it into an email to '+recipient+' and send it.';
+      }
+    });
+    actions.append(draft,copy);panel.append(title,instructions,actions,details,copyStatus);
+    status.insertAdjacentElement('afterend',panel);
+    status.classList.remove('is-error');
+    status.textContent='Email prepared. Please send it to complete your '+label+'.';
+    button.setAttribute('aria-controls',panel.id);
+    panel.scrollIntoView({behavior:'smooth',block:'start'});
   });
 }
-
-const seminarForm=document.querySelector('#seminar-registration-form');
-if(seminarForm&&window.fetch&&window.AbortController){
-  const button=seminarForm.querySelector('#registration-submit');
-  const status=seminarForm.querySelector('#registration-status');
-  let submitting=false;
-  seminarForm.addEventListener('input',event=>{if(event.target.matches('input[required]'))event.target.setCustomValidity('');});
-  seminarForm.addEventListener('submit',async event=>{
-    event.preventDefault();
-    if(submitting)return;
-    for(const input of seminarForm.querySelectorAll('input[required]:not([type="radio"])')){
-      input.value=input.value.trim();
-      input.setCustomValidity(input.value?'':'Please complete this field.');
-    }
-    if(!seminarForm.reportValidity()||seminarForm.elements.namedItem('_honey').value)return;
-    submitting=true;button.disabled=true;button.textContent='Sending…';
-    seminarForm.setAttribute('aria-busy','true');
-    status.classList.remove('is-error');status.textContent='Sending your registration. Please keep this page open.';
-    const controller=new AbortController();
-    const timeout=window.setTimeout(()=>controller.abort(),30000);
-    let sent=false;
-    try{
-      const response=await fetch(seminarForm.dataset.submitEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(Object.fromEntries(new FormData(seminarForm))),signal:controller.signal});
-      const result=await response.json();
-      if(!response.ok||!(result.success===true||result.success==='true')||/activat|confirm your email/i.test(String(result.message||'')))throw new Error('Delivery was not confirmed.');
-      sent=true;status.textContent='Your registration has been sent. Thank you.';
-      window.location.assign(seminarForm.elements.namedItem('_next').value);
-    }catch(error){
-      status.classList.add('is-error');status.textContent='We could not confirm delivery. Your details are still in the form. Please try again, or email them to wang.june312@gmail.com.';
-    }finally{
-      window.clearTimeout(timeout);seminarForm.removeAttribute('aria-busy');
-      if(!sent){submitting=false;button.disabled=false;button.textContent='Register';}
-    }
-  });
-}
+prepareEmailRegistration(document.querySelector('#membership-form'),false);
+prepareEmailRegistration(document.querySelector('#seminar-registration-form'),true);
